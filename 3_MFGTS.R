@@ -1,14 +1,13 @@
-# Chick Breeding Scheme / Additive (Truncation) Scenario with Minimising Inbreeding
+# Long-term selection in layers (MFGTS)
 # Ivan Pocrnic
-# Latest Update: November 2020.
 
 # Clean
 rm(list = ls())
-# Load libs
+# Load packages
 library("AlphaSimR")
 library("tidyverse")
 # Load fje
-source("../funkcije_breeding.R")
+source("../functions.R")
 # Set WD
 args = commandArgs(trailingOnly=TRUE)
 if (length(args) < 1) {
@@ -22,19 +21,11 @@ dire = paste("../../data",scenarioMain,scenarioName, sep = "/")
 unlink(dire, recursive = TRUE)
 dir.create(path = dire, recursive = TRUE, showWarnings = FALSE)
 setwd(dir = dire)
-# getwd()
 
 noDams=1080
 
 # Create blupf90 parameter files and bash scripts
 prepare_par()
-
-
-# Sys.getenv("PATH")
-# system("echo $PATH")
-# sessionInfo()
-# Sys.setenv(PATH=" ")
-
 
 # For the sake of comparison, use the same Burn-in as for the Standard scenario
 
@@ -544,21 +535,7 @@ for(gen in 6:15){
     p5fs = selectInd(p5f, noDams, use = "ebv", sex = "F", trait=selIndex, b=iweight)
     damg[[gen+1]] = p5fs
 
-    # For testing purposes, save image after each cycle (Remove from the final code)
-    # put=paste("genomicF", gen, ".RData", sep = "_")
-    # save.image(put)
 }
 
-
-# Save full image at the end
-# save.image("genomicF.RData")
 save.image("results.RData")
-# load("genomicF.RData")
 
-# If sucesseful then clean:
-# rm genomic_*
-# rm mr*
-# rm mar*
-# rm renum*
-# rm extractsol.sh
-# rm prepgeno.sh

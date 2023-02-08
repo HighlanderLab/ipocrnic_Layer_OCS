@@ -1,15 +1,13 @@
-# Chick Breeding Scheme 
-#   Additive scenario with OCS and no mate allocation (Both males and females in OCS)
+# Long-term selection in layers (GOCS)
 # Ivan Pocrnic
-# Latest Update: November 2020.
 
 # Clean
 rm(list = ls())
-# Load libs
+# Load packages
 library("AlphaSimR")
 library("tidyverse")
 # Load fje
-source("../funkcije_breeding.R")
+source("../functions.R")
 # Set WD
 args = commandArgs(trailingOnly=TRUE)
 if (length(args) < 1) {
@@ -24,18 +22,11 @@ dire = paste("../../data",scenarioMain,scenarioName, sep = "/")
 unlink(dire, recursive = TRUE)
 dir.create(path = dire, recursive = TRUE, showWarnings = FALSE)
 setwd(dir = dire)
-# getwd()
 
 noDams=1080
 
 # Create blupf90 parameter files and bash scripts
 prepare_par()
-
-# Sys.getenv("PATH")
-# system("echo $PATH")
-# sessionInfo()
-# Sys.setenv(PATH=" ")
-
 
 # For the sake of comparison, use the same Burn-in as for the Standard scenario
 
