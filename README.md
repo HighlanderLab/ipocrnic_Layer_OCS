@@ -19,5 +19,4 @@ or
 ```
  system(command = "$HOME/bin/AlphaMate | tee AlphaMate.log")
 ```
-
-
+- N.B. simulations take a long time to run and we advise use of server/HPC to run them.

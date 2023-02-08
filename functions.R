@@ -1,29 +1,5 @@
-# Set of functions used in constructing the database and running evaluations with AlphaSimR
+# Long-term selection in layers (support functions)
 # Ivan Pocrnic
-# Latest Update: November 2020.
-
-# Dependencies:
- # renumf90
- # blupf90
- # AlphaRelate
- # AlphaMate
-
-# List of functions:
- #  1. RecSysMale
- #  2. RecSysFemale
- #  3. run_blup
- #  4. run_gblup
- #  5. run_OCS
- #  6. run_expandCrossPlan
- #  7. run_prepare
- #  8. run_prepareGENO
- #  9. PullSumm
- # 10. PullSummTogether 
- # 11. prepare_par
-
-# Everything goes to the recording system
-# And then after each (G)BLUP new datafile is created; which shows who has the phenotype at the moment
-# So the recording system is really a dummy system, not the realistic one
 
 
 RecSysMale <- function(datafile, popname) {
@@ -105,71 +81,12 @@ run_gblup <- function(datafile) {
                     X5 = col_double()))
   sol1_1 <- sol1[sol1$X2 %in% datafile$IId,]
   sol1_1 <- sol1_1[order(match(sol1_1$X2, datafile$IId)),]
-  # Test if problem: setdiff(sol1$X2,RecSys$IId)
   datafile$EbvT1 <- sol1_1$X3
   datafile$EbvT2 <- sol1_1$X4
   datafile$EbvT3 <- sol1_1$X5
   return(datafile)
 }
 
-# Input: candidates_plan & RecSys 
-run_OCS <- function(ocspop, datafile, deg, sires, dams) {
-  # Create index of EBV for criterion:
-  tmp = data.frame(id=ocspop@id, crit=(0.2*ocspop@ebv[,1]+0.35*ocspop@ebv[,2])+0.45*ocspop@ebv[,3])
-  write.table(x=tmp, file="ebv.txt", col.names=FALSE, row.names=FALSE, quote=FALSE)
-  
-  # Assign sex:
-  tmp = data.frame(id=ocspop@id, genderRole=ocspop@sex)
-  tmp$genderRole = as.numeric(factor(ocspop@sex, levels=c("M", "F")))
-  write.table(x=tmp, file="GenderRole.txt", col.names=FALSE, row.names=FALSE, quote=FALSE)
-  
-  # Full (All Animals) Pedigree: 
-  # Later on if run inside GBLUP folder, pedigree already created!!!
-  tmp <- data.frame(datafile[,c("IId", "FId", "MId")])
-  tmp$FId[is.na(tmp$FId)] <- 0
-  tmp$MId[is.na(tmp$MId)] <- 0
-  write.table(tmp, file="Blupf90.ped", quote=FALSE, row.names=FALSE, col.names=FALSE, sep=" ", na = "0")
-  
-  # ID of the OCS candidates: 
-  idcand=ocspop@id
-  write.table(idcand, file="PedigreeSet.ped", quote=FALSE, row.names=FALSE, col.names=FALSE, sep=" ", na = "0")
-  
-  # AlphaRelate parameter file: 
-  sink(file = "AlphaRelateSpec.txt")
-  cat("PedigreeFile                , Blupf90.ped\n")
-  cat("PedInbreeding               , Yes\n")
-  cat("PedNrm                      , Yes\n")
-  cat("PedNrmSubsetFile            , PedigreeSet.ped\n")
-  cat("OutputFormat                , f7.4\n")
-  cat("Stop\n")
-  sink()
-  
-  # Run AlphaRelate:
-  system(command="$HOME/bin/AlphaRelate | tee AlphaRelate.log")
-  
-  # AlphaMate parameter file: 
-  sink(file = "AlphaMateSpec.txt")
-  cat("GenderFile                  , GenderRole.txt\n")
-  cat("NrmMatrixFile               , PedigreeNrm.txt\n")
-  cat("SelCriterionFile            , ebv.txt\n")
-  # cat("NumberOfMatings             , 1080\n")
-  # cat("NumberOfMaleParents         ,  120\n")
-  cat("NumberOfMatings             , ",dams,"\n", sep="")
-  cat("NumberOfMaleParents         ,  ",sires,"\n", sep="")
-  cat("EqualizeMaleContributions   , Yes\n")
-  cat("NumberOfFemaleParents       , ",dams,"\n", sep="")
-  # cat("NumberOfFemaleParents       , 1080\n")
-  cat("EqualizeFemaleContributions , Yes\n")
-  # cat("TargetDegree                ,   30\n")
-  cat("TargetDegree                ,  ",deg,"\n", sep="")
-  cat("Stop\n")
-  sink()
-  
-  # Run AlphaMate:
-  system(command="$HOME/bin/AlphaMate | tee AlphaMate.log")
-  
-  #return()
-}
 
 # Input: candidates_plan & RecSys 
 run_OCS_NOMP <- function(ocspop, datafile, deg, sires, dams) {
@@ -183,7 +100,6 @@ run_OCS_NOMP <- function(ocspop, datafile, deg, sires, dams) {
   write.table(x=tmp, file="GenderRole.txt", col.names=FALSE, row.names=FALSE, quote=FALSE)
   
   # Full (All Animals) Pedigree: 
-  # Later on if run inside GBLUP folder, pedigree already created!!!
   tmp <- data.frame(datafile[,c("IId", "FId", "MId")])
   tmp$FId[is.na(tmp$FId)] <- 0
   tmp$MId[is.na(tmp$MId)] <- 0
@@ -240,7 +156,6 @@ run_OCS_EASED <- function(ocspop, datafile, deg, dams) {
   write.table(x = tmp, file = "GenderRole.txt", col.names = FALSE, row.names = FALSE, quote = FALSE)
   
   # Full (All Animals) Pedigree: 
-  # Later on if run inside GBLUP folder, pedigree already created!!!
   tmp <- data.frame(datafile[,c("IId", "FId", "MId")])
   tmp$FId[is.na(tmp$FId)] <- 0
   tmp$MId[is.na(tmp$MId)] <- 0
@@ -271,117 +186,6 @@ run_OCS_EASED <- function(ocspop, datafile, deg, dams) {
   cat("MateAllocation              , No\n")
   cat("EvolAlgStopTolerance        , 0.01\n")
   cat("NumberOfMatings             , ",dams,"\n", sep="")
-  # cat("NumberOfMaleParents         ,  ",sires,"\n", sep="")
-  # cat("EqualizeMaleContributions   , No\n")
-  # cat("LimitMaleContributions      , Yes\n")
-  # cat("LimitMaleContributionsMin   , 9\n")
-  # 1080/9 -> max 120 sires
-  # cat("LimitMaleContributionsMax   , 54\n")
-  # 1080/27 -> min 40 sires
-  # 1080/54 -> min 20 sires
-  cat("NumberOfFemaleParents       , ",dams,"\n", sep="")
-  cat("EqualizeFemaleContributions , Yes\n")
-  cat("TargetDegree                ,  ",deg,"\n", sep="")
-  cat("Stop\n")
-  sink()
-  
-  # Run AlphaMate:
-  system(command="$HOME/bin/AlphaMate | tee AlphaMate.log")
-  
-  #return()
-}
-
-# Input: candidates_plan & RecSys 
-run_GRMOCS <- function(ocspop, datafile, deg, sires, dams) {
-  # Create index of EBV for criterion:
-  tmp = data.frame(id=ocspop@id, crit=(0.2*ocspop@ebv[,1]+0.35*ocspop@ebv[,2])+0.45*ocspop@ebv[,3])
-  write.table(x=tmp, file="ebv.txt", col.names=FALSE, row.names=FALSE, quote=FALSE)
-  
-  # Assign sex:
-  tmp = data.frame(id=ocspop@id, genderRole=ocspop@sex)
-  tmp$genderRole = as.numeric(factor(ocspop@sex, levels=c("M", "F")))
-  write.table(x=tmp, file="GenderRole.txt", col.names=FALSE, row.names=FALSE, quote=FALSE)
-  
-  # Create Genotype file
-  idg = ocspop@id 
-  pr=pullSnpGeno(ocspop)
-  idgpr=cbind(idg, pr)
-  write.table(idgpr,"Genotype.txt", col.names=FALSE,row.names=FALSE,quote=FALSE,append=FALSE,sep=" ")
-  
-  nloc=ncol(pr)
-  
-  # AlphaRelate parameter file: 
-  sink(file = "AlphaRelateSpec.txt")
-  cat("GenotypeFile       ,Genotype.txt\n")
-  cat("NumberOfLoci       ,",nloc,"\n", sep="")
-  cat("GenNrm             ,Yes\n")
-  cat("GenNrmType         ,VanRaden\n")
-  cat("Stop\n")
-  sink()
-  
-  # Run AlphaRelate:
-  system(command="$HOME/bin/AlphaRelate | tee AlphaRelate.log")
-  
-  # AlphaMate parameter file: 
-  sink(file = "AlphaMateSpec.txt")
-  cat("GenderFile                  , GenderRole.txt\n")
-  cat("NrmMatrixFile               , GenotypeNrm.txt\n")
-  cat("SelCriterionFile            , ebv.txt\n")
-  cat("NumberOfMatings             , ",dams,"\n", sep="")
-  cat("NumberOfMaleParents         ,  ",sires,"\n", sep="")
-  cat("EqualizeMaleContributions   , Yes\n")
-  cat("NumberOfFemaleParents       , ",dams,"\n", sep="")
-  cat("EqualizeFemaleContributions , Yes\n")
-  cat("TargetDegree                ,  ",deg,"\n", sep="")
-  cat("Stop\n")
-  sink()
-  
-  # Run AlphaMate:
-  system(command="$HOME/bin/AlphaMate | tee AlphaMate.log")
-  
-  #return()
-}
-
-
-# Input: candidates_plan & RecSys 
-run_GRMOCS_CCM <- function(ocspop, deg, sires, dams, matings) {
-  # Create index of EBV for criterion:
-  tmp = data.frame(id=ocspop@id, crit=(0.2*ocspop@ebv[,1]+0.35*ocspop@ebv[,2])+0.45*ocspop@ebv[,3])
-  write.table(x=tmp, file="ebv.txt", col.names=FALSE, row.names=FALSE, quote=FALSE)
-  
-  # Assign sex:
-  tmp = data.frame(id=ocspop@id, genderRole=ocspop@sex)
-  tmp$genderRole = as.numeric(factor(ocspop@sex, levels=c("M", "F")))
-  write.table(x=tmp, file="GenderRole.txt", col.names=FALSE, row.names=FALSE, quote=FALSE)
-  
-  # Create Genotype file
-  idg = ocspop@id 
-  pr=pullSnpGeno(ocspop)
-  idgpr=cbind(idg, pr)
-  write.table(idgpr,"Genotype.txt", col.names=FALSE,row.names=FALSE,quote=FALSE,append=FALSE,sep=" ")
-  
-  nloc=ncol(pr)
-  
-  # AlphaRelate parameter file: 
-  sink(file = "AlphaRelateSpec.txt")
-  cat("GenotypeFile       ,Genotype.txt\n")
-  cat("NumberOfLoci       ,",nloc,"\n", sep="")
-  cat("GenNrm             ,Yes\n")
-  cat("GenNrmType         ,VanRaden\n")
-  cat("Stop\n")
-  sink()
-  
-  # Run AlphaRelate:
-  system(command="$HOME/bin/AlphaRelate | tee AlphaRelate.log")
-  
-  # AlphaMate parameter file: 
-  sink(file = "AlphaMateSpec.txt")
-  cat("GenderFile                  , GenderRole.txt\n")
-  cat("NrmMatrixFile               , GenotypeNrm.txt\n")
-  cat("SelCriterionFile            , ebv.txt\n")
-  cat("NumberOfMatings             , ",matings,"\n", sep="")
-  cat("NumberOfMaleParents         ,  ",sires,"\n", sep="")
-  cat("EqualizeMaleContributions   , Yes\n")
   cat("NumberOfFemaleParents       , ",dams,"\n", sep="")
   cat("EqualizeFemaleContributions , Yes\n")
   cat("TargetDegree                ,  ",deg,"\n", sep="")
@@ -407,7 +211,6 @@ run_MinF <- function(ocspop, datafile, sires, dams) {
   write.table(x=tmp, file="GenderRole.txt", col.names=FALSE, row.names=FALSE, quote=FALSE)
   
   # Full (All Animals) Pedigree: 
-  # Later on if run inside GBLUP folder, pedigree already created!!!
   tmp <- data.frame(datafile[,c("IId", "FId", "MId")])
   tmp$FId[is.na(tmp$FId)] <- 0
   tmp$MId[is.na(tmp$MId)] <- 0
@@ -435,13 +238,10 @@ run_MinF <- function(ocspop, datafile, sires, dams) {
   cat("GenderFile                  , GenderRole.txt\n")
   cat("NrmMatrixFile               , PedigreeNrm.txt\n")
   cat("SelCriterionFile            , ebv.txt\n")
-  #cat("NumberOfMatings             , 1080\n")
-  #cat("NumberOfMaleParents         ,  120\n")
   cat("NumberOfMatings             , ",dams,"\n", sep="")
   cat("NumberOfMaleParents         ,  ",sires,"\n", sep="")
   cat("EqualizeMaleContributions   , Yes\n")
   cat("NumberOfFemaleParents       , ",dams,"\n", sep="")
-  #cat("NumberOfFemaleParents       , 1080\n")
   cat("EqualizeFemaleContributions , Yes\n")
   cat("ModeMinInbreeding           , Yes\n")
   cat("Stop\n")
@@ -453,10 +253,8 @@ run_MinF <- function(ocspop, datafile, sires, dams) {
   #return()
 }
 
-
-# This is solved in new ASR versions? 
+# N.B. This function is redundant with new versions of AlphaSimR, but main code should be updated as well
 run_expandCrossPlan <- function(nProgenyPerMat, CrossPlanFile) {
-  # nProgenyPerMat=20
   for (set in 1:length(nProgenyPerMat)) {
     crp = matrix(ncol=2, nrow=nrow(CrossPlanFile) * nProgenyPerMat[set])
     k = 0
@@ -467,9 +265,7 @@ run_expandCrossPlan <- function(nProgenyPerMat, CrossPlanFile) {
         crp[k, 2] = CrossPlanFile[i, 3]
       }
     }
-    # ret[[set]] = makeCross(pop=pop, crossPlan=crp, simParam=simParam)
   }
-  # Prepare crossPlan for alphasimR
   crp=data.frame(crp)
   tmp = crp %>%
     mutate(sm=as.character(crp$X1)) %>%
@@ -491,23 +287,13 @@ run_allocate_matings <- function(nProgenyPerMat, CrossPlanFile) {
     rename(Id_M = Id) %>%  
     slice(rep(1:n(), times = nContribution) ) %>% 
     dplyr::mutate(Id_M = as.character(Id_M))
-  # The random approach by weight didn't give exact number of each sire's contributions
-  # crossPlanMF = cbind(df, 
-  #                   sample_n(dfM, size = sum(dfM$nContribution), replace = TRUE, weight = dfM$nContribution ) )
-  # Slice to shuffle them randomly, and then allocate sire to each dam
   crossPlanMF = cbind( slice(dfF, sample(1:n())),
                        slice(dfM, sample(1:n())) )
-  # table(crossPlanMF$Id_M)
-  # expand for number of progeny per dam (mating)
-  # We need 21600 eggs !!!
   crossPlanMF_expanded = crossPlanMF %>% 
     slice(rep(1:n(), each = nProgenyPerMat))
-  # Prepare for ASR format
   crossPlanMF_final = as.matrix(cbind(crossPlanMF_expanded$Id_F, crossPlanMF_expanded$Id_M))
   return(crossPlanMF_final)
 }
-
-
 
 
 run_prepare <- function(datafile) {
@@ -535,36 +321,19 @@ run_prepare <- function(datafile) {
   rm(Pheno)
 }
 
-
 # Prepare genotype file in blupf90 format
 # Extremely inefficient (copying) !!!
-
 run_prepareGENO <- function(popname) {
-  # idg=as.numeric(popname@id)
-  # idg=as.integer(popname@id)
   idg = popname@id 
   pr=pullSnpGeno(popname)
   prt = apply(pr[,1:ncol(pr)],1,paste,sep ="",collapse="")
   idgpr=cbind(idg, prt)
-  # format(idgpr, scientific = FALSE)
   write.table(idgpr,"mrk.tmp",col.names=FALSE,row.names=FALSE,quote=FALSE,append=TRUE,sep=" ")
   system(command = "sh prepgeno.sh")
-  # system(command = "awk '{printf(\"%-8s %s\\n\", $1,i$2)}' mrk.tmp > markeri.dat")
-  # Backslash the quotes and the backslash itself :)
-  # In future implementations completely substitute bash script with R function (e.g. from ZG course) 
 }
 
 
-# Alternative in bash:
-# write.table(idg,"idg.txt",append=TRUE,col.names=FALSE,row.names=FALSE)
-# write.table(pr,"snp.txt",append=TRUE,col.names=FALSE,row.names=FALSE)
-# sed 's/ //g' snp.txt > mrk1.tmp
-# paste idg.txt mrk1.tmp > mrk2.tmp
-# awk '{printf("%-8s %s\n", $1,i$2)}' mrk2.tmp > markeri.dat
-
-
 # Create summary report table
-
 PullSumm <- function(datafile, popname, sex) {
   gePa = genParam(popname)
   datafile = rbind(datafile,
@@ -609,11 +378,7 @@ PullSumm <- function(datafile, popname, sex) {
   #return(datafile)
 }
 
-
-# Create summary report table (M and F candidates together)
-# This fja got ridiculously big and slow 
-# TO DO: Split into several functions, and make efficient 
-
+# N.B. Huge function creatimng several metrics in summary report table
 PullSummTogether <- function(datafile, popname) {
   # Calculate population statistics
   gePa = genParam(popname)
@@ -783,19 +548,9 @@ PullSireContribution <- function(datafile, CrossPlanFile) {
 }
 
 
-
-
-# Prepare all the dependency files from inside the R
-# renum.par
-# renumGS.par
-# extractsol.sh
-# prepgeno.sh
-
 prepare_par <- function() {
 
-# extractsol.sh can be replaced by R-function later
-# Check new examples given at ZG course, Sven or Alireza... 
-  
+# extractsol.sh can be rather replaced by R-function
 sink("extractsol.sh", type="output")
 writeLines("#!/bin/bash
 awk '{if ($1==1 && $2==2) print $3,$4}' solutions | sort +0 -1 > sol1.tmp
