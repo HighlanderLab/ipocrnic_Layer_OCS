@@ -356,7 +356,7 @@ for(gen in 6:15){
     #getwd()
 
     # Prepare pedigree and datafile for blupf90
-    # Removes phenotypes that are not rally available at given timepoint
+    # Removes phenotypes that are not really available at given timepoint
     run_prepare(RecSys)
 
     # Run blupf90, and update GEBV in recording system
@@ -480,7 +480,7 @@ for(gen in 6:15){
     #getwd()
 
     # Prepare pedigree and datafile for blupf90
-    # Removes phenotypes that are not rally available at given timepoint
+    # Removes phenotypes that are not really available at given timepoint
     run_prepare(RecSys)
 
     # Run blupf90, and update GEBV in recording system

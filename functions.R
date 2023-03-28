@@ -302,7 +302,7 @@ run_prepare <- function(datafile) {
   blupPed$FId[is.na(blupPed$FId)] <- 0
   blupPed$MId[is.na(blupPed$MId)] <- 0
   # blupPed <- blupPed[order(blupPed$IId),]
-  # This ordering is not correct, but doesn't matter since we run renumf90 later anyways
+  # This ordering might not be correct, but doesn't matter since we run renumf90 later anyways
   write.table(blupPed, "Blupf90.ped", quote=FALSE, row.names=FALSE, col.names=FALSE, sep=" ", na = "0")
   # Delete pedigree - each time create a new pedigree:
   rm(blupPed)
@@ -378,7 +378,7 @@ PullSumm <- function(datafile, popname, sex) {
   #return(datafile)
 }
 
-# N.B. Huge function creatimng several metrics in summary report table
+# N.B. Huge function creating several metrics in summary report table
 PullSummTogether <- function(datafile, popname) {
   # Calculate population statistics
   gePa = genParam(popname)
@@ -515,14 +515,7 @@ PullSummTogether <- function(datafile, popname) {
                           F_QTL3_obs     = 1 - ( sum(het_qtl3) / nQTL),
                           F_QTL1_exp     = 1 - (sum(2*p_qtl1*(1-p_qtl1)) / nQTL),
                           F_QTL2_exp     = 1 - (sum(2*p_qtl2*(1-p_qtl2)) / nQTL),
-                          F_QTL3_exp     = 1 - (sum(2*p_qtl3*(1-p_qtl3)) / nQTL),
-                          # Based on Meuwissen et al. 2020;
-                          # Sometimes undefined "NaN" zero/zero so added "1e-12" to main script where het_0 and p_0 are calculated 
-                          F_snp_Meu      = 1 - ( sum(het_snp / het0_snp) / nSNP),
-                          F_neutral_Meu  = 1 - ( sum(het_neutral / het0_neutral) / nSNP),
-                          F_QTL1_Meu     = 1 - ( sum(het_qtl1 / het0_qtl1) / nQTL),
-                          F_QTL2_Meu     = 1 - ( sum(het_qtl2 / het0_qtl2) / nQTL),
-                          F_QTL3_Meu     = 1 - ( sum(het_qtl3 / het0_qtl3) / nQTL)
+                          F_QTL3_exp     = 1 - (sum(2*p_qtl3*(1-p_qtl3)) / nQTL)
                    ))
   # return(datafile)
 }

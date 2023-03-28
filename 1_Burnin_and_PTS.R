@@ -215,7 +215,7 @@ for(gen in 1:5){
     setwd(dir = Dir)
 
     # Prepare pedigree and datafile for blupf90
-    # Removes phenotypes that are not rally available at given timepoint
+    # Removes phenotypes that are not really available at given timepoint
     run_prepare(RecSys)
 
     # Run blupf90, and update EBV in recording system
@@ -315,7 +315,7 @@ for(gen in 6:15){
   setwd(dir = Dir)
   
   # Prepare pedigree and datafile for blupf90
-  # Removes phenotypes that are not rally available at given timepoint
+  # Removes phenotypes that are not really available at given timepoint
   run_prepare(RecSys)
   
   # Run blupf90, and update EBV in recording system
@@ -339,8 +339,4 @@ for(gen in 6:15){
 }
 
 save.image("results.RData")
-
-
-
-
 

@@ -186,4 +186,3 @@ for(gen in 6:15){
 
 save.image("results.RData")
 
-
