@@ -1,6 +1,7 @@
 # Assessment of long-term trends in genetic mean and variance after the introduction of genomic selection in layers: a simulation study
 ## Pocrnic, Obsteter, Gaynor, Wolc & Grojanc (2023)
 ## DOI: 10.3389/fgene.2023.1168212 
+## [Link to published paper](https://www.frontiersin.org/articles/10.3389/fgene.2023.1168212/full)
 
 - `functions.R` Various support functions needed for the simulation
 - `1_Burnin_and_PTS.R` Generating base population genomes; 10 years of  conventional truncation selection on BLUP and random mating with equal contributions (PTS); 20 years of PTS
